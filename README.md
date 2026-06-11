@@ -7,6 +7,9 @@ then on open it instantly by name — no URL required — from anywhere on your
 machine. It tracks everything in a local SQLite index and uses **git worktrees**
 so multiple branches live in separate folders without duplicating the repo.
 
+<img width="961" height="701" alt="image" src="https://github.com/user-attachments/assets/79580f9d-3d25-4b07-9e94-1be2e09b7557" />
+
+
 ```bash
 dev open myrepo          # already cached? opens instantly. not cached? clones it.
 dev open api             # fuzzy-matches "api" -> "awesome-api-project"
