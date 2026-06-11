@@ -1,0 +1,6 @@
+# Core dependency (required)
+rich>=13.0.0
+
+# Recommended extras (the tool falls back to subprocess/urllib without them)
+GitPython>=3.1.0
+requests>=2.28.0

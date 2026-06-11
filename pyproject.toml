@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitcache"
+version = "1.0.0"
+description = "A fast, local GitHub repository manager with caching, worktrees, and fuzzy search."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Turker Albayrak" }]
+keywords = ["git", "github", "cli", "cache", "worktree", "developer-tools"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+
+dependencies = [
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+# Installed by default via `pip install .[full]`; the tool degrades gracefully
+# (subprocess git + urllib) when these are missing.
+full = [
+    "GitPython>=3.1.0",
+    "requests>=2.28.0",
+]
+dev = [
+    "pytest>=7.0",
+    "build>=1.0",
+]
+
+[project.scripts]
+dev = "devcache.cli:main"
+devcache = "devcache.cli:main"
+gitcache = "devcache.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/TurkerAlbayrak/gitcache"
+Issues = "https://github.com/TurkerAlbayrak/gitcache/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["devcache*"]
