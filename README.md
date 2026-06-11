@@ -27,7 +27,7 @@ dev sync                 # fetch + pull every cached repo
 | **Fuzzy search** | `dev open api` / `dev search api` match the closest repo name. |
 | **Editor flexibility** | `--editor code|nvim|vim|subl|cursor|...` (configurable). |
 | **Polished UX** | Colored output, clone progress bars, spinners, and clean error handling via [`rich`](https://github.com/Textualize/rich). |
-| **Global command** | Installs as `dev` (and `devcache`). Cross-platform: Windows, macOS, Linux. |
+| **Global command** | Installs as `dev`, `devcache`, and `gitcache`. Cross-platform: Windows, macOS, Linux. |
 
 ---
 
@@ -35,35 +35,77 @@ dev sync                 # fetch + pull every cached repo
 
 Requires **Python 3.8+** and **git** on your PATH.
 
-**From PyPI (once published):**
+### From GitHub (recommended)
+
+Install directly from the repository — no PyPI account needed:
 
 ```bash
-pip install gitcache
+pip install git+https://github.com/TurkerAlbayrak/gitcache.git
 ```
 
-> The PyPI distribution name is `gitcache` (the name `devcache` was already
-> taken). After installing, you still run the tool as `dev`.
-
-**From source (this repository):**
+With the recommended extras (GitPython for richer clone progress + requests):
 
 ```bash
-# from the project root
-pip install .
-
-# or, with the recommended extras (GitPython for richer clone progress + requests)
-pip install ".[full]"
+pip install "gitcache[full] @ git+https://github.com/TurkerAlbayrak/gitcache.git"
 ```
 
-This installs three identical console commands: `dev`, `devcache`, and `gitcache`.
+Pin to a specific tag/branch/commit:
+
+```bash
+pip install git+https://github.com/TurkerAlbayrak/gitcache.git@v1.0.0
+```
+
+Upgrade to the latest version later:
+
+```bash
+pip install --upgrade --force-reinstall git+https://github.com/TurkerAlbayrak/gitcache.git
+```
+
+### From source (clone first)
+
+```bash
+git clone https://github.com/TurkerAlbayrak/gitcache.git
+cd gitcache
+
+pip install .            # core install
+pip install ".[full]"    # with GitPython + requests
+```
+
+### From PyPI
+
+> Not published yet. The name `devcache` was already taken, so the planned
+> distribution name is `gitcache`:
+>
+> ```bash
+> pip install gitcache
+> ```
+
+### What you get
+
+All install methods register **three identical console commands** — use whichever you like:
+
+```bash
+dev --version
+devcache --version
+gitcache --version
+```
 
 > The only hard dependency is `rich`. `GitPython` and `requests` are optional —
 > DevCache falls back to plain `git` (subprocess) and the stdlib `urllib` when
 > they aren't installed.
 
-For development:
+### Development setup
 
 ```bash
-pip install -e ".[full,dev]"
+git clone https://github.com/TurkerAlbayrak/gitcache.git
+cd gitcache
+pip install -e ".[full,dev]"     # editable install with dev tools (pytest, build)
+```
+
+### Uninstall
+
+```bash
+pip uninstall gitcache
 ```
 
 ---
@@ -308,8 +350,98 @@ cli.cmd_open
 - `editors` — maps shorthand names to actual launch commands. Add your own.
 - Set `DEVCACHE_HOME` to relocate all state (handy for testing or portable setups).
 
+### Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `DEVCACHE_HOME` | Relocate all DevCache state (default: `~/.devcache`). |
+| `DEVCACHE_GITHUB_TOKEN` | GitHub token (highest-priority env var). |
+| `GITHUB_TOKEN` / `GH_TOKEN` | Fallback tokens, also picked up automatically. |
+
+---
+
+## Troubleshooting
+
+**`dev` command not found after install**
+The Python scripts directory isn't on your PATH. Either reopen your terminal, or
+run via the module: `python -m devcache --help`. On Windows the scripts live in
+`...\PythonXX\Scripts\`; on Linux/macOS in `~/.local/bin`.
+
+**`Repo '<name>' not found locally or on GitHub`**
+The name isn't cached and couldn't be resolved. Provide a URL
+(`dev open <name> --url <git-url>`), use `owner/name` shorthand, or authenticate
+first with `dev auth login`.
+
+**`Editor '<x>' not found on PATH`**
+The editor command isn't installed/visible. For VSCode, enable *Shell Command:
+Install 'code' command in PATH* from the command palette, or pass another editor
+with `--editor`, or edit the `editors` map in `config.json`.
+
+**GitHub API rate limit exceeded**
+Unauthenticated requests are rate-limited. Run `dev auth login` (or set
+`GITHUB_TOKEN`) to raise the limit substantially.
+
+**Clone is slow / hangs**
+Large repos take time. Progress is shown live; for private repos make sure your
+token or `gh` auth has the `repo` scope.
+
+**Garbled characters on Windows**
+DevCache reconfigures the console to UTF-8 automatically. If you still see odd
+glyphs, use Windows Terminal (not the legacy console) or run `chcp 65001`.
+
+---
+
+## FAQ
+
+**Why is the PyPI/distribution name `gitcache` but the command `dev`?**
+The PyPI name `devcache` was already taken. The package import name and the
+command stay the same; only the distribution name differs.
+
+**Where are my repos stored?**
+Under `~/.devcache/repos/`. Extra branches live in `~/.devcache/worktrees/`.
+Nothing is stored in your current working directory.
+
+**Does it work without `GitPython`, `requests`, or the `gh` CLI?**
+Yes. It falls back to the system `git` (subprocess) and the stdlib `urllib`.
+Those tools just make things nicer (progress bars, private-repo discovery).
+
+**How do I move my cache to another drive?**
+Set `DEVCACHE_HOME` to the new location (and move the existing folder there).
+
+**Is my token safe?**
+It's stored in `~/.devcache/config.json` with `chmod 600` where supported, and
+`.devcache/` is git-ignored. You can also rely solely on `gh`/env vars.
+
+---
+
+## Contributing
+
+```bash
+git clone https://github.com/TurkerAlbayrak/gitcache.git
+cd gitcache
+pip install -e ".[full,dev]"
+```
+
+The codebase is intentionally small and modular (see **Architecture**). Each
+module owns one concern, and `cli.py` is the only orchestration layer — a good
+place to start reading. Issues and pull requests are welcome at
+<https://github.com/TurkerAlbayrak/gitcache>.
+
+### Building & publishing (maintainers)
+
+```bash
+python -m build                 # produces dist/*.whl and dist/*.tar.gz
+python -m twine check dist/*    # validate metadata
+python -m twine upload --repository testpypi dist/*   # test first
+python -m twine upload dist/*                          # then real PyPI
+```
+
+Bump `version` in `pyproject.toml` for every release (PyPI rejects re-uploads
+of an existing version).
+
 ---
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
+
